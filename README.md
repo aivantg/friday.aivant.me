@@ -2,6 +2,15 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+### Database setup
+
+Once at the beginning, and then everytime you make schema changes:
+run `npx prisma migrate dev` to create and apply any migrations and regenerate prisma client
+
+`npx prisma db push` to make a change without generating/creating migration
+`npx prisma generate` to regenerate schema
+`npx prisma studio` to view database
+
 First, run the development server:
 
 ```bash
