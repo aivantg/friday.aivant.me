@@ -28,6 +28,7 @@ model Flight {
   departureTime       String
   arrivalTime         String
   flightDuration      String
+  checkinJobId        Int?
   email               String?
   phoneNumber         String?
 }

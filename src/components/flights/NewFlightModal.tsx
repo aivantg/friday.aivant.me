@@ -34,6 +34,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
   const toast = useToast();
   const onSubmit = async (values: Flight) => {
     setLoading(true);
+    values.phoneNumber = `${values.phoneNumber}`; // Convert phone number to string
     const resultData = await fetch('/api/flights', {
       method: 'POST',
       body: JSON.stringify(values),
@@ -55,7 +56,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
         description: errorMessage,
         status: 'error',
         position: 'top',
-        duration: null,
+        duration: 10000,
         isClosable: true,
       });
     }
