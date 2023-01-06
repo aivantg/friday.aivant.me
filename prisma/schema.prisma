@@ -23,4 +23,6 @@ model Flight {
   lastName            String
   flightNumber        Int
   flightDate          DateTime
+  email               String?
+  phoneNumber         String?
 }
