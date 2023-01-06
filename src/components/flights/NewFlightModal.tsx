@@ -17,6 +17,7 @@ import {
   SimpleGrid,
   Text,
   useDisclosure,
+  useToast,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
 import * as Yup from 'yup';
@@ -30,22 +31,34 @@ type ComponentProps = {
 export default function NewFlightModal(props: ComponentProps): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setLoading] = useState(false);
+  const toast = useToast();
   const onSubmit = async (values: Flight) => {
     setLoading(true);
     const resultData = await fetch('/api/flights', {
       method: 'POST',
       body: JSON.stringify(values),
     });
-    const result = await resultData.json();
-    console.log('Successfully saved new flight');
-    console.log(result);
-    if (result.success) {
-      alert(result.data);
-    }
+    const { success, data, errorMessage } = await resultData.json();
     setLoading(false);
-    // TODO: Error checking
-    props.onSuccessfulSave();
-    onClose();
+    if (success) {
+      toast({
+        title: `Successfully saved your flight from ${data.departureAirport} to ${data.arrivalAirport}`,
+        description: `Scheduling check-in...`,
+        status: 'success',
+        position: 'top',
+      });
+      props.onSuccessfulSave();
+      onClose();
+    } else {
+      toast({
+        title: 'Error looking up flight',
+        description: errorMessage,
+        status: 'error',
+        position: 'top',
+        duration: null,
+        isClosable: true,
+      });
+    }
   };
 
   return (

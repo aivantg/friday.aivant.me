@@ -1,5 +1,4 @@
 import { Flight, PrismaClient } from '@prisma/client';
-import dayjs from 'dayjs';
 const Amadeus = require('amadeus');
 import type { NextApiRequest, NextApiResponse } from 'next';
 
@@ -66,16 +65,47 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
         flightNumber: '' + flightData.flightNumber,
         scheduledDepartureDate: flightData.flightDate,
       });
+      console.log('Finished amadeus fetch');
       const { success, errorMessage, fullFlightData } = parseAmadeusResult(
         amadeusResult.result
       );
+      console.log('Parsed result');
 
       if (success) {
         const newFlight = await prisma.flight.create({
           data: { ...flightData, ...fullFlightData },
         });
-        console.log('Successfully found extra flight data and saved flight');
+        console.log(
+          'Successfully found extra flight data and saved flight to prisma.'
+        );
         console.log(newFlight);
+
+        // Attempt to schedule job
+        console.log('Trying to schedule flight checkin...');
+        const scheduleData = await fetch('http://localhost:3001/jobs', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: `${newFlight.firstName}-${newFlight.flightDate}-${newFlight.departureAirport}-${newFlight.arrivalAirport}`,
+            taskScript: 'southwestCheckin',
+            scheduleDate: newFlight.flightDate,
+            data: JSON.stringify({
+              confirmationNumber: newFlight.confirmationNumber,
+              firstName: newFlight.firstName,
+              lastName: newFlight.lastName,
+              phoneNumber: newFlight.phoneNumber,
+              email: newFlight.email,
+            }),
+            secret: 'password',
+          }),
+        });
+        const result = await scheduleData.json();
+        console.log('SCHEDULE RESULT');
+        console.log(result);
+
         res.json({
           success,
           data: newFlight,
