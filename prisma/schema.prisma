@@ -18,11 +18,16 @@ model User {
 
 model Flight { 
   id                  Int     @id @default(autoincrement())
-  confirmationNumber  String  @unique
+  confirmationNumber  String  
   firstName           String
   lastName            String
   flightNumber        Int
-  flightDate          DateTime
+  flightDate          String
+  departureAirport    String
+  arrivalAirport      String
+  departureTime       String
+  arrivalTime         String
+  flightDuration      String
   email               String?
   phoneNumber         String?
 }

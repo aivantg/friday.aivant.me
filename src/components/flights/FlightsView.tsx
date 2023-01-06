@@ -14,7 +14,7 @@ export default function FlightsView(props: ComponentProps): JSX.Element {
     setLoading(true);
     const data = await fetch('/api/flights');
     const flights = await data.json();
-    setFlights(flights.result);
+    setFlights(flights.data);
     setLoading(false);
   };
 

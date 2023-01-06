@@ -36,9 +36,12 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
       method: 'POST',
       body: JSON.stringify(values),
     });
-    const result = resultData.json();
+    const result = await resultData.json();
     console.log('Successfully saved new flight');
     console.log(result);
+    if (result.success) {
+      alert(result.data);
+    }
     setLoading(false);
     // TODO: Error checking
     props.onSuccessfulSave();
@@ -73,9 +76,12 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                   .integer()
                   .min(0)
                   .max(9999, 'Flight number must be 1-4 digits'),
-                flightDate: Yup.date()
+                flightDate: Yup.string()
                   .required('Required')
-                  .min(new Date(), 'Please choose a future date'),
+                  .matches(
+                    /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/,
+                    'Must be a valid date with the format: YYYY-MM-DD'
+                  ),
                 email: Yup.string().email().notRequired(),
                 phoneNumber: Yup.number()
                   .integer()
@@ -164,7 +170,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                       <FormLabel mt={4}>
                         Flight Date (local to departing airport)
                       </FormLabel>
-                      <Input {...field} type="datetime-local" />
+                      <Input {...field} placeholder="YYYY-MM-DD" />
                       <FormErrorMessage>
                         {form.errors.flightDate}
                       </FormErrorMessage>
