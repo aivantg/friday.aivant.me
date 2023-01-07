@@ -86,8 +86,8 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
       console.log(newFlight);
 
       // Attempt to schedule job
-      // let scheduleDate = new Date(newFlight.departureTime);
-      let scheduleDate = new Date('2023-01-07T05:08-06:00');
+      let scheduleDate = new Date(newFlight.departureTime);
+      // let scheduleDate = new Date('2023-01-07T22:10-08:00'); // manual override
       scheduleDate.setDate(scheduleDate.getDate() - 1);
       console.log(
         `Trying to schedule flight checkin for following date: ${scheduleDate.toString()}...`
@@ -105,7 +105,7 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
             name: `${newFlight.firstName}-${newFlight.flightDate}-${newFlight.departureAirport}-${newFlight.arrivalAirport}`,
             taskScript: 'southwestCheckin',
             scheduleDate: scheduleDate.toISOString(),
-            callbackURL: `${process.env.FRIDAY_CLIENT_URL}/jobs/checkinCallback`,
+            callbackURL: `${process.env.FRIDAY_CLIENT_URL}/api/flights/checkinCallback`,
             data: JSON.stringify({
               confirmationNumber: newFlight.confirmationNumber,
               firstName: newFlight.firstName,
@@ -125,7 +125,7 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
         // Save job id
         let updatedFlight = await prisma.flight.update({
           where: { id: newFlight.id },
-          data: { checkinJobId: result.id },
+          data: { checkinJobId: result.id, checkinStatus: 1 },
         });
 
         res.json({

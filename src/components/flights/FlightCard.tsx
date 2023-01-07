@@ -9,12 +9,13 @@ import {
   Heading,
   HStack,
   IconButton,
+  Link,
   Text,
   Tooltip,
   useToast,
   VStack,
 } from '@chakra-ui/react';
-import { PhoneIcon, EmailIcon, CloseIcon } from '@chakra-ui/icons';
+import { PhoneIcon, EmailIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { Flight } from '@prisma/client';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
@@ -84,10 +85,29 @@ export default function FlightCard({
               </VStack>
             </HStack>
           </Box>
-          <HStack>
-            <Text fontSize="s">Boarding Position:</Text>
-            <Text fontSize="2xl">TBD</Text>
-          </HStack>
+          {flightData.checkinError ? (
+            <Flex
+              flexDirection="column"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Text fontSize="xs">
+                <b>Error details:</b> {flightData.checkinError}
+              </Text>
+              <Link
+                fontSize="xs"
+                href={`https://www.southwest.com/air/check-in/?confirmationNumber=${flightData.confirmationNumber}&passengerFirstName=${flightData.firstName}&passengerLastName=${flightData.lastName}`}
+                isExternal
+              >
+                Check-in manually <ExternalLinkIcon mx="2px" />
+              </Link>
+            </Flex>
+          ) : (
+            <HStack>
+              <Text fontSize="s">Boarding Position:</Text>
+              <Text fontSize="2xl">TBD</Text>
+            </HStack>
+          )}
         </Flex>
         <Divider mt={1} mb={1} />
         <Flex w="100%" justifyContent="flex-end">

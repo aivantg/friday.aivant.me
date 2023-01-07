@@ -14,8 +14,10 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
   // Take in checkin result and update local flight
   try {
     const prisma = new PrismaClient();
-    const data = JSON.parse(req.body);
-    console.log(`Received checkin callback with data: ${JSON.stringify(data)}`);
+    console.log(
+      `Received checkin callback with data: ${JSON.stringify(req.body)}`
+    );
+    const data = req.body;
     const { jobId } = data;
     const flight = await prisma.flight.findFirst({
       where: { checkinJobId: jobId },
