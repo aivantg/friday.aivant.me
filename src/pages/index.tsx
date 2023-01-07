@@ -33,17 +33,16 @@ export default function Index() {
         <title>Friday</title>
       </Head>
       <Center bg="#C3E8BD" w="100vw" h="100vh">
-        <Box borderRadius="5%" p={8} bg="white" w="60vw" h="70vh">
-          <Heading size="md">Friday</Heading>
-          <Tabs>
-            <TabList>
+        <Box borderRadius="5%" p={4} bg="#FAF9F6" w="60vw" h="85vh">
+          <Tabs h="100%">
+            <TabList h="10%">
               {applications.map((app) => (
                 <Tab key={app.id}>{app.name}</Tab>
               ))}
             </TabList>
-            <TabPanels>
+            <TabPanels h="90%">
               {applications.map((app) => (
-                <TabPanel key={app.id}>
+                <TabPanel key={app.id} h="100%">
                   <app.component />
                 </TabPanel>
               ))}

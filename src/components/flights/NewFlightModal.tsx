@@ -35,18 +35,19 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
   const onSubmit = async (values: Flight) => {
     setLoading(true);
     values.phoneNumber = `${values.phoneNumber}`; // Convert phone number to string
-    const resultData = await fetch('/api/flights', {
+    const resultData = await fetch('/api/flights/new', {
       method: 'POST',
       body: JSON.stringify(values),
     });
-    const { success, data, errorMessage } = await resultData.json();
+    const { success, flight, errorMessage } = await resultData.json();
     setLoading(false);
     if (success) {
       toast({
-        title: `Successfully saved your flight from ${data.departureAirport} to ${data.arrivalAirport}`,
-        description: `Scheduling check-in...`,
+        title: `Successfully saved your flight from ${flight.departureAirport} to ${flight.arrivalAirport}`,
+        description: `You'll get the best boarding position possible!`,
         status: 'success',
         position: 'top',
+        duration: 3000,
       });
       props.onSuccessfulSave();
       onClose();
@@ -56,7 +57,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
         description: errorMessage,
         status: 'error',
         position: 'top',
-        duration: 10000,
+        duration: 6000,
         isClosable: true,
       });
     }
@@ -64,7 +65,9 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
 
   return (
     <>
-      <Button onClick={onOpen}>Add new flight</Button>
+      <Button colorScheme="green" size="sm" pr={4} pl={4} onClick={onOpen}>
+        Add new flight
+      </Button>
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>

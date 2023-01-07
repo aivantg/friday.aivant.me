@@ -27,8 +27,12 @@ model Flight {
   arrivalAirport      String
   departureTime       String
   arrivalTime         String
-  flightDuration      String
-  checkinJobId        Int?
+  flightDuration      String 
   email               String?
   phoneNumber         String?
+  checkinJobId        Int? 
+  checkinStatus       Int     @default(0)  // enum 0: error scheduling 1: scheduled 2: checkin failed 3: checkin succeeded
+  checkinError        String?
+  boardingPosition    String?
+  deletedAt           DateTime?
 }
