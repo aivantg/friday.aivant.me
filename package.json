@@ -2,6 +2,9 @@
   "name": "friday.aivant.me",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "13.1.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
