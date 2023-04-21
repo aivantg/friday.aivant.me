@@ -19,7 +19,7 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import { Field, Form, Formik } from 'formik';
+import { Field, FieldProps, Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { Flight } from '@prisma/client';
 import { useState } from 'react';
@@ -28,11 +28,21 @@ type ComponentProps = {
   onSuccessfulSave: () => void;
 };
 
+type FlightFormParams = {
+  confirmationNumber: string;
+  firstName: string;
+  lastName: string;
+  flightNumber: number;
+  flightDate: string;
+  email: string;
+  phoneNumber: string;
+};
+
 export default function NewFlightModal(props: ComponentProps): JSX.Element {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setLoading] = useState(false);
   const toast = useToast();
-  const onSubmit = async (values: Flight) => {
+  const onSubmit = async (values: FlightFormParams) => {
     setLoading(true);
     values.phoneNumber = `${values.phoneNumber}`; // Convert phone number to string
     const resultData = await fetch('/api/flights/new', {
@@ -79,7 +89,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                 confirmationNumber: '',
                 firstName: '',
                 lastName: '',
-                flightNumber: '',
+                flightNumber: 0,
                 flightDate: '',
                 email: '',
                 phoneNumber: '',
@@ -111,77 +121,82 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
               <Form>
                 <SimpleGrid columns={2} spacing={4}>
                   <Field name="firstName">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
                         isRequired
                         isInvalid={
-                          form.errors.firstName && form.touched.firstName
+                          !!(form.errors.firstName && form.touched.firstName)
                         }
                       >
                         <FormLabel>First Name</FormLabel>
                         <Input {...field} placeholder="Jane" />
                         <FormErrorMessage>
-                          {form.errors.firstName}
+                          {`${form.errors.firstName}`}
                         </FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
                   <Field name="lastName">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
                         isRequired
                         isInvalid={
-                          form.errors.lastName && form.touched.lastName
+                          !!(form.errors.lastName && form.touched.lastName)
                         }
                       >
                         <FormLabel>Last Name</FormLabel>
                         <Input {...field} placeholder="Doe" />
                         <FormErrorMessage>
-                          {form.errors.lastName}
+                          {`${form.errors.lastName}`}
                         </FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
                   <Field name="confirmationNumber">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
                         isRequired
                         isInvalid={
-                          form.errors.confirmationNumber &&
-                          form.touched.confirmationNumber
+                          !!(
+                            form.errors.confirmationNumber &&
+                            form.touched.confirmationNumber
+                          )
                         }
                       >
                         <FormLabel>Confirmation Number</FormLabel>
                         <Input {...field} placeholder="ABC123" />
                         <FormErrorMessage>
-                          {form.errors.confirmationNumber}
+                          {`${form.errors.confirmationNumber}`}
                         </FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
                   <Field name="flightNumber">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
                         isRequired
                         isInvalid={
-                          form.errors.flightNumber && form.touched.flightNumber
+                          !!(
+                            form.errors.flightNumber &&
+                            form.touched.flightNumber
+                          )
                         }
                       >
                         <FormLabel>Flight Number</FormLabel>
                         <Input {...field} type="number" placeholder="1234" />
                         <FormErrorMessage>
-                          {form.errors.flightNumber}
+                          {`${form.errors.flightNumber}`}
                         </FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
                 </SimpleGrid>
                 <Field name="flightDate">
-                  {({ field, form }) => (
+                  {({ field, form }: FieldProps) => (
                     <FormControl
                       isRequired
                       isInvalid={
-                        form.errors.flightDate && form.touched.flightDate
+                        !!(form.errors.flightDate && form.touched.flightDate)
                       }
                     >
                       <FormLabel mt={4}>
@@ -189,7 +204,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                       </FormLabel>
                       <Input {...field} placeholder="YYYY-MM-DD" />
                       <FormErrorMessage>
-                        {form.errors.flightDate}
+                        {`${form.errors.flightDate}`}
                       </FormErrorMessage>
                     </FormControl>
                   )}
@@ -201,22 +216,24 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                 </Text>
                 <SimpleGrid columns={2} spacing={4}>
                   <Field name="email">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
-                        isInvalid={form.errors.email && form.touched.email}
+                        isInvalid={!!(form.errors.email && form.touched.email)}
                       >
                         <FormLabel>Email</FormLabel>
 
                         <Input {...field} placeholder="janedoe@gmail.com" />
-                        <FormErrorMessage>{form.errors.email}</FormErrorMessage>
+                        <FormErrorMessage>{`${form.errors.email}`}</FormErrorMessage>
                       </FormControl>
                     )}
                   </Field>
                   <Field name="phoneNumber">
-                    {({ field, form }) => (
+                    {({ field, form }: FieldProps) => (
                       <FormControl
                         isInvalid={
-                          form.errors.phoneNumber && form.touched.phoneNumber
+                          !!(
+                            form.errors.phoneNumber && form.touched.phoneNumber
+                          )
                         }
                       >
                         <FormLabel>Phone Number (digits only)</FormLabel>
@@ -227,7 +244,7 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                           placeholder="123456789"
                         />
                         <FormErrorMessage>
-                          {form.errors.phoneNumber}
+                          {`${form.errors.phoneNumber}`}
                         </FormErrorMessage>
                       </FormControl>
                     )}
