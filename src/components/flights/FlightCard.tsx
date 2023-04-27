@@ -105,7 +105,7 @@ export default function FlightCard({
           ) : (
             <HStack>
               <Text fontSize="s">Boarding Position:</Text>
-              <Text fontSize="2xl">TBD</Text>
+              <Text fontSize="2xl">{flightData.boardingPosition ?? 'TBD'}</Text>
             </HStack>
           )}
         </Flex>

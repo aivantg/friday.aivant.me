@@ -87,7 +87,6 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
 
       // Attempt to schedule job
       let scheduleDate = new Date(newFlight.departureTime);
-      // let scheduleDate = new Date('2023-01-07T22:10-08:00'); // manual override
       scheduleDate.setDate(scheduleDate.getDate() - 1);
       console.log(
         `Trying to schedule flight checkin for following date: ${scheduleDate.toString()}...`
