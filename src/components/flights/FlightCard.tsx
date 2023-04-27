@@ -85,7 +85,7 @@ export default function FlightCard({
               </VStack>
             </HStack>
           </Box>
-          {flightData.checkinError ? (
+          {flightData.checkinStatus == 2 ? (
             <Flex
               flexDirection="column"
               justifyContent="center"
