@@ -6,7 +6,6 @@ import {
   FormErrorMessage,
   FormHelperText,
   FormLabel,
-  Heading,
   Input,
   Modal,
   ModalBody,
@@ -21,8 +20,15 @@ import {
 } from '@chakra-ui/react';
 import { Field, FieldProps, Form, Formik } from 'formik';
 import * as Yup from 'yup';
-import { Flight } from '@prisma/client';
 import { useState } from 'react';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import dayjs from 'dayjs';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 type ComponentProps = {
   onSuccessfulSave: () => void;
@@ -105,10 +111,12 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                   .max(9999, 'Flight number must be 1-4 digits'),
                 flightDate: Yup.string()
                   .required('Required')
-                  .matches(
-                    /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/,
-                    'Must be a valid date with the format: YYYY-MM-DD'
+                  .test(
+                    'flightDate',
+                    "Invalid date. Must follow format: '02-23-2023 2:53 am'",
+                    (value) => dayjs(value, 'MM-DD-YYYY h:mm a', true).isValid()
                   ),
+
                 email: Yup.string().email().notRequired(),
                 phoneNumber: Yup.number()
                   .integer()
@@ -200,12 +208,21 @@ export default function NewFlightModal(props: ComponentProps): JSX.Element {
                       }
                     >
                       <FormLabel mt={4}>
-                        Flight Date (local to departing airport)
+                        Flight Time (local to departing airport)
                       </FormLabel>
-                      <Input {...field} placeholder="YYYY-MM-DD" />
+                      <Input
+                        {...field}
+                        placeholder="MM-DD-YYYY h:mm a (e.g. 02-23-2023 2:53 am)"
+                      />
                       <FormErrorMessage>
                         {`${form.errors.flightDate}`}
                       </FormErrorMessage>
+                      {field.value && !form.errors.flightDate && (
+                        <FormHelperText>
+                          Parsed date:{' '}
+                          {dayjs(field.value, 'MM-DD-YYYY h:mm a').toString()}
+                        </FormHelperText>
+                      )}
                     </FormControl>
                   )}
                 </Field>

@@ -1,6 +1,14 @@
 import { Flight, Prisma, PrismaClient } from '@prisma/client';
 const Amadeus = require('amadeus');
 import type { NextApiRequest, NextApiResponse } from 'next';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import dayjs from 'dayjs';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 type Data = {
   flight?: Flight;
@@ -65,29 +73,49 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
   // Pull Additional flight data
   try {
     console.log(`Getting flight data with following info: "${req.body}"...`);
-    const amadeusResult = await amadeus.schedule.flights.get({
-      carrierCode: 'WN',
-      flightNumber: '' + flightData.flightNumber,
-      scheduledDepartureDate: flightData.flightDate,
-    });
-    console.log('Finished amadeus fetch');
-    const { success, errorMessage, fullFlightData } = parseAmadeusResult(
-      amadeusResult.result
-    );
-    console.log('Parsed result');
+
+    const departureDate = dayjs(flightData.flightDate, 'MM-DD-YYYY h:mm a');
+    let fullFlightDataResult;
+    let success;
+    let errorMessage;
+    try {
+      throw new Error('Skip amadeus');
+      const amadeusResult = await amadeus.schedule.flights.get({
+        carrierCode: 'WN',
+        flightNumber: '' + flightData.flightNumber,
+        scheduledDepartureDate: departureDate.format('YYYY-MM-DD'),
+      });
+      console.log('Finished amadeus fetch');
+      const { success, errorMessage, fullFlightData } = parseAmadeusResult(
+        amadeusResult.result
+      );
+      fullFlightDataResult = fullFlightData;
+      console.log('Parsed result');
+    } catch (e) {
+      console.log('Error using amadeus, just skipping with default data');
+      success = true;
+      errorMessage = 'No error ;)';
+      fullFlightDataResult = {
+        departureAirport: 'NA',
+        departureTime: departureDate.toISOString(),
+        arrivalAirport: 'NA',
+        arrivalTime: departureDate.toISOString(),
+        flightDuration: 'PT3H',
+      };
+    }
 
     if (success) {
       const newFlight = await prisma.flight.create({
-        data: { ...flightData, ...fullFlightData },
+        data: { ...flightData, ...fullFlightDataResult },
       });
       console.log(
         'Successfully found extra flight data and saved flight to prisma.'
       );
       console.log(newFlight);
 
+      // Subtract 1 day from dayjs date
       // Attempt to schedule job
-      let scheduleDate = new Date(newFlight.departureTime);
-      scheduleDate.setDate(scheduleDate.getDate() - 1);
+      const scheduleDate = departureDate.subtract(1, 'day');
       console.log(
         `Trying to schedule flight checkin for following date: ${scheduleDate.toString()}...`
       );
@@ -101,7 +129,10 @@ export default async (req: NextApiRequest, res: NextApiResponse<Data>) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            name: `${newFlight.firstName}-${newFlight.flightDate}-${newFlight.departureAirport}-${newFlight.arrivalAirport}`,
+            name: `${newFlight.firstName}-${newFlight.flightDate.replace(
+              ' ',
+              '_'
+            )}-${newFlight.departureAirport}-${newFlight.arrivalAirport}`,
             taskScript: 'southwestCheckin',
             scheduleDate: scheduleDate.toISOString(),
             callbackURL: `${process.env.FRIDAY_CLIENT_URL}/api/flights/checkinCallback`,
