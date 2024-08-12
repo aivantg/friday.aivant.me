@@ -2,52 +2,108 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import OpenAI from 'openai';
 import { ChatCompletion, ChatCompletionCreateParams } from 'openai/resources';
 import { z } from 'zod';
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
+import stream from 'stream';
 
-const JOURNAL_SYSTEM_PROMPT = `You are a journaling assistant. You will receive personal journal entries, and your job is to add some simple formatting, and metadata to them. You should not change the content of the journal entries at all.
+const JOURNAL_SYSTEM_PROMPT = `You are a journaling assistant helping someone named Aivant (pronounced "uh-vant"). You will receive personal journal entries that are transcribed from audio. Your job is to correct any obvious spelling/punctuation/grammar mistakes in the transcription, add some simple formatting, and add some metadata. You should not change the content of the journal entries at all aside from spelling and grammar corrections.
 
 The desired format for the journal entries is as follows:
 # <One-sentence title summarizing the journal entry>
 
-<Unedited content of the journal entry you recieved>.
+<Spell-checked content of the journal entry you recieved>.
 
-----
-**Keywords**: <Comma-separated list of keywords that stand out from the entry (names, places, ideas, etc.)>.
-**Summary**: <A 1-5 sentence summary of the journal entry, maintaining specifics about what the subject of the entry is about.>.`;
+*Keywords*: <Comma-separated list of keywords that stand out from the entry (names, places, ideas, etc.)>.
+
+*Summary*: <A 1-5 sentence summary of the journal entry, maintaining specifics about what the subject of the entry is about>.`;
 
 const allowedMethods = ['POST'];
-const journalRequestSchema = z.object({
-  message: z.string(),
-});
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async (req: NextApiRequest, res: NextApiResponse<any>) => {
   if (!allowedMethods.includes(req.method!) || req.method == 'OPTIONS') {
     return res
       .status(405)
       .send({ success: false, errorMessage: 'Method not allowed.' });
   }
-
   console.log('Recieved journal request. Body:', req.body);
+  const form = new IncomingForm();
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error parsing the file.' });
+    }
+    console.log('Parsed form:', fields, files);
 
-  const journalEntryRaw = journalRequestSchema.parse(req.body);
+    // Ensure user provided correct server secret
+    const secret = fields.secret ?? [''];
+    if (secret[0] !== process.env.FRIDAY_SERVER_SECRET) {
+      res.status(401).json({ error: 'Invalid secret provided.' });
+    }
 
-  const response = await chatCompletion(
-    journalEntryRaw.message,
-    'gpt-4o-mini',
-    JOURNAL_SYSTEM_PROMPT,
-    undefined,
-    undefined,
-    false
-  );
+    // See if the user provided a custom system prompt
+    const systemPrompt = (fields.systemPrompt ?? [JOURNAL_SYSTEM_PROMPT])[0];
+    if (!files.file) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+    }
+    const file = files.file[0];
+    const filePath = file.filepath;
+    res.status(200).json({
+      message:
+        'File uploaded successfully. Check back later for status of transcription',
+    });
 
-  console.log('GPT Journal Response:', JSON.stringify(response, null, 2));
+    // Rename file to have same extension it did in original filename
+    const extension = file.originalFilename?.split('.').pop() ?? 'm4a';
+    const newFilePath = filePath + '.' + extension;
+    fs.renameSync(filePath, newFilePath);
 
-  const journalEntry = response.choices[0].message.content;
-  if (!journalEntry) {
-    res.status(500);
-    res.send('No journal entry created as GPT response was empty');
-  } else {
-    const result = saveDayOneEntry(journalEntry);
-    res.send(result);
-  }
+    console.log(`File uploaded. Size: ${file.size} bytes`);
+    console.log(`File path: ${filePath}`);
+    console.log(`New file path: ${newFilePath}`);
+
+    try {
+      // Upload the file to OpenAI Whisper API for transcription
+      const response = await openai.audio.transcriptions.create({
+        model: 'whisper-1',
+        file: fs.createReadStream(newFilePath),
+      });
+
+      console.log(
+        'OpenAI Whisper Response:',
+        JSON.stringify(response, null, 2)
+      );
+
+      const transcription = response.text;
+
+      const journalResponse = await chatCompletion(
+        transcription,
+        'gpt-4o-mini',
+        systemPrompt,
+        undefined,
+        undefined,
+        false
+      );
+
+      console.log('GPT Journal Response:', JSON.stringify(response, null, 2));
+
+      const journalEntry = journalResponse.choices[0].message.content;
+      if (journalEntry) {
+        const result = await saveDayOneEntry(journalEntry);
+        console.log('Journal Entry Saved:', result);
+      }
+    } catch (error) {
+      console.error('Error uploading to OpenAI:', error);
+      // res.status(500).json({ error: 'Failed to transcribe audio.' });
+    } finally {
+      // Clean up: Delete the temporary file if necessary
+      fs.unlinkSync(newFilePath);
+    }
+  });
 };
 
 export type OpenAIModel = 'gpt-4o-mini';
