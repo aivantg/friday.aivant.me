@@ -74,8 +74,8 @@ export default async (req: NextApiRequest, res: NextApiResponse<any>) => {
       });
 
       console.log(
-        'OpenAI Whisper Response:',
-        JSON.stringify(response, null, 2)
+        'OpenAI Whisper Responded. Transcription length: ' +
+          response.text.length
       );
 
       const transcription = response.text;
@@ -89,7 +89,10 @@ export default async (req: NextApiRequest, res: NextApiResponse<any>) => {
         false
       );
 
-      console.log('GPT Journal Response:', JSON.stringify(response, null, 2));
+      console.log(
+        'GPT Journal Responded. Response:' +
+          JSON.stringify(journalResponse).length
+      );
 
       const journalEntry = journalResponse.choices[0].message.content;
       if (journalEntry) {
