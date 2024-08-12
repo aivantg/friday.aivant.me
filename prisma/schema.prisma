@@ -7,28 +7,5 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-}
-
-model Flight { 
-  id                  Int     @id @default(autoincrement())
-  confirmationNumber  String  
-  firstName           String
-  lastName            String
-  email               String?
-  phoneNumber         String?
-  flightDate          String?
-  flightMetadataJson  String?
-  checkinJobId        Int?
-  checkinStatus       Int     @default(0)  // enum 0: error scheduling 1: scheduled 2: checkin failed 3: checkin succeeded
-  checkinError        String?
-  boardingPosition    String?
-  deletedAt           DateTime?
 }
