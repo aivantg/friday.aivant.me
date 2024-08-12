@@ -10,8 +10,6 @@ import {
 } from '@chakra-ui/react';
 import Head from 'next/head';
 import { FC } from 'react';
-import FlightsView from '../components/flights/FlightsView';
-import Home from '../components/home/Home';
 
 type UserApplication = {
   id: string;
@@ -21,9 +19,17 @@ type UserApplication = {
 
 // Add to this list to create more applications
 const applications: UserApplication[] = [
-  // { id: 'home', name: 'Home', component: Home },
-  { id: 'flights', name: 'Flights', component: FlightsView },
+  { id: 'home', name: 'Home', component: Home },
+  // { id: 'flights', name: 'Flights', component: FlightsView },
 ];
+
+function Home() {
+  return (
+    <Box>
+      <Heading>Welcome to the new empty friday.aivant.me</Heading>
+    </Box>
+  );
+}
 
 export default function Index() {
   return (
